@@ -1,0 +1,25 @@
+backend:
+  name: github
+  repo: northscythian/Pizza-Bellissima-Korday-
+  branch: main
+
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "categories"
+    label: "Категории меню"
+    folder: "data/categories"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Название категории", name: "name", widget: "string" }
+      - label: "Блюда"
+        name: "items"
+        widget: "list"
+        label_singular: "Блюдо"
+        fields:
+          - { label: "Название", name: "name", widget: "string" }
+          - { label: "Описание", name: "description", widget: "text", required: false }
+          - { label: "Цена (₸)", name: "price", widget: "number", value_type: "int" }
+          - { label: "Фото", name: "image", widget: "image", required: false, default: "" }
