@@ -3,7 +3,7 @@ name: Пиццы
 items:
   - name: Маргарита
     description: Томатный соус, моцарелла, базилик
-    price: 2500
+    price: 2600
     image: Photo/Margherita.jpeg
   - name: Диавола
     description: Острая пепперони, моцарелла, чили
