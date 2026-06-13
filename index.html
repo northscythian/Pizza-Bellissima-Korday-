@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bellissima — доставка пиццы</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Шапка -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <span class="logo-icon">🍕</span>
+                <span class="logo-text">Bellissima</span>
+            </div>
+            <div class="cart-btn" id="cart-btn">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count" id="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Герой -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-title">Настоящая <span class="accent">итальянская пицца</span> из дровяной печи</h1>
+            <p class="hero-subtitle">Тесто 48-часовой ферментации, томаты San Marzano, моцарелла di bufala</p>
+            <div class="hero-features">
+                <span>🔥 Дровяная печь</span>
+                <span>⏱️ 40 мин доставка</span>
+                <span>⭐ 4.9/5 отзывов</span>
+            </div>
+            <a href="#menu-section" class="btn-primary">Смотреть меню →</a>
+        </div>
+    </section>
+
+    <!-- Поиск -->
+    <section class="search">
+        <div class="container">
+            <input type="text" id="search" placeholder="🔍 Поиск пиццы..." class="search-input">
+        </div>
+    </section>
+
+    <!-- Категории -->
+    <section class="categories">
+        <div class="container">
+            <div class="category-list" id="categories">
+                <button class="cat-btn active" data-cat="all">Все</button>
+                <button class="cat-btn" data-cat="Пиццы">🍕 Пиццы</button>
+                <button class="cat-btn" data-cat="Закуски">🍟 Закуски</button>
+                <button class="cat-btn" data-cat="Салаты">🥗 Салаты</button>
+                <button class="cat-btn" data-cat="Напитки">🥤 Напитки</button>
+                <button class="cat-btn" data-cat="Десерты">🍰 Десерты</button>
+                <button class="cat-btn" data-cat="Соусы">🥫 Соусы</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Меню -->
+    <section id="menu-section" class="menu">
+        <div class="container">
+            <div class="menu-grid" id="menu-grid"></div>
+        </div>
+    </section>
+
+    <!-- Корзина -->
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>🛒 Корзина</h3>
+            <button class="close-cart" id="close-cart">✕</button>
+        </div>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-footer">
+            <div class="cart-total">Итого: <strong id="cart-total">0 ₸</strong></div>
+            <button class="checkout-btn" id="checkout-btn">Оформить заказ</button>
+        </div>
+    </div>
+
+    <!-- Модалка -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 Оформление заказа</h3>
+                <button class="close-modal" id="close-modal">✕</button>
+            </div>
+            <form id="order-form">
+                <input type="text" id="name" placeholder="Ваше имя" required>
+                <input type="tel" id="phone" placeholder="Телефон" required>
+                <input type="text" id="address" placeholder="Адрес доставки" required>
+                <textarea id="comment" rows="2" placeholder="Комментарий"></textarea>
+                <select id="payment">
+                    <option value="cash">💵 Наличными</option>
+                    <option value="card">💳 Картой курьеру</option>
+                    <option value="kaspi">🏦 Kaspi.kz</option>
+                </select>
+                <button type="submit" class="submit-btn">✅ Подтвердить заказ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Подвал -->
+    <footer>
+        <div class="container">
+            <p>🍕 Bellissima Pizzeria — доставка пиццы 11:00–23:00</p>
+            <p>📞 +7 (777) 123-45-67 | 📍 ул. Абая, 123</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
