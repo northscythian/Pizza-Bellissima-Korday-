@@ -111,7 +111,7 @@ function parseYamlMenu(yamlText, categoryName) {
 // Резервное меню (если файлы не загрузились)
 function useFallbackMenu() {
     menuData = [
-        { id: 1, name: "Маргарита", category: "Пиццы", description: "Томатный соус, моцарелла, базилик", price: 2500, image: "Photo/Margherita.jpeg" },
+        { id: 1, name: "Маргарита", category: "Пиццы", description: "Томатный соус, моцарелла, базилик", price: 2600, image: "Photo/Margherita.jpeg" },
         { id: 2, name: "Диавола", category: "Пиццы", description: "Острая пепперони, моцарелла, чили", price: 3200, image: "Photo/Spicy_Diavola_pizza_pepperon.jpeg" },
         { id: 3, name: "Четыре сыра", category: "Пиццы", description: "Моцарелла, горгонзола, пармезан, фонтана", price: 3500, image: "Photo/Quattro_Formaggi_pizza_cheese_pull_202606122125.jpeg" },
         { id: 4, name: "Карбонара", category: "Пиццы", description: "Бекон, яйцо, пармезан, сливочный соус", price: 3600, image: "Photo/Carbonara_pizza_with_pancetta_bacon_202606122127.jpeg" },
