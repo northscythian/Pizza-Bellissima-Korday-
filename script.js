@@ -4,48 +4,119 @@ let cart = {};
 let currentCategory = "all";
 let searchText = "";
 
-// ===== ЗАГРУЗКА МЕНЮ ИЗ JSON =====
+// ===== ЗАГРУЗКА МЕНЮ ИЗ ФАЙЛОВ DECAP CMS =====
 async function loadMenuFromJSON() {
     try {
-        console.log("🔄 Загрузка меню из data/menu.json...");
-        const response = await fetch('data/menu.json');
+        console.log("🔄 Загрузка меню из data/categories/...");
         
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+        // Получаем список файлов категорий
+        const categoryFiles = [
+            'pizzas.md',
+            'zakuski.md', 
+            'salaty.md',
+            'napitki.md',
+            'deserty.md',
+            'sousy.md'
+        ];
+        
+        let allCategories = [];
+        
+        for (const file of categoryFiles) {
+            try {
+                const response = await fetch(`data/categories/${file}`);
+                if (response.ok) {
+                    const text = await response.text();
+                    // Парсим YAML front matter
+                    const match = text.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
+                    if (match) {
+                        const frontMatter = match[1];
+                        const category = parseYAML(frontMatter);
+                        allCategories.push(category);
+                    }
+                }
+            } catch(e) {
+                console.log(`Файл ${file} не найден`);
+            }
         }
         
-        const data = await response.json();
-        console.log("✅ Меню загружено:", data);
+        if (allCategories.length === 0) {
+            throw new Error("Нет загруженных категорий");
+        }
         
-        // Преобразуем структуру CMS в плоский список для сайта
+        // Преобразуем в плоский список для сайта
         menuData = [];
         let idCounter = 1;
         
-        if (data.categories && Array.isArray(data.categories)) {
-            data.categories.forEach(category => {
-                if (category.items && Array.isArray(category.items)) {
-                    category.items.forEach(item => {
-                        menuData.push({
-                            id: idCounter++,
-                            name: item.name,
-                            category: category.name,
-                            description: item.description || "",
-                            price: item.price,
-                            image: item.image || ""
-                        });
+        allCategories.forEach(category => {
+            if (category.items && Array.isArray(category.items)) {
+                category.items.forEach(item => {
+                    menuData.push({
+                        id: idCounter++,
+                        name: item.name,
+                        category: category.name,
+                        description: item.description || "",
+                        price: item.price,
+                        image: item.image || ""
                     });
-                }
-            });
-        }
+                });
+            }
+        });
         
-        console.log(`📋 Загружено ${menuData.length} блюд`);
+        console.log(`✅ Загружено ${menuData.length} блюд`);
         renderMenu();
         
     } catch (error) {
         console.error("❌ Ошибка загрузки меню:", error);
-        console.log("⚠️ Используем резервное меню");
         useFallbackMenu();
     }
+}
+
+// Простой парсер YAML
+function parseYAML(yaml) {
+    const result = {};
+    const lines = yaml.split('\n');
+    let currentKey = null;
+    let inItems = false;
+    let currentItem = {};
+    let itemsList = [];
+    
+    for (let line of lines) {
+        line = line.trim();
+        if (line === 'items:') {
+            inItems = true;
+            result.items = [];
+            continue;
+        }
+        if (inItems && line === '-') {
+            if (Object.keys(currentItem).length > 0) {
+                itemsList.push(currentItem);
+            }
+            currentItem = {};
+            continue;
+        }
+        if (inItems && line.includes(':')) {
+            const [key, ...valueParts] = line.split(':');
+            const value = valueParts.join(':').trim();
+            if (key === 'name') currentItem.name = value;
+            if (key === 'description') currentItem.description = value;
+            if (key === 'price') currentItem.price = parseInt(value);
+            if (key === 'image') currentItem.image = value;
+            continue;
+        }
+        if (!inItems && line.includes(':')) {
+            const [key, value] = line.split(':');
+            result[key.trim()] = value.trim();
+        }
+    }
+    
+    if (Object.keys(currentItem).length > 0) {
+        itemsList.push(currentItem);
+    }
+    if (itemsList.length > 0) {
+        result.items = itemsList;
+    }
+    
+    return result;
 }
 
 // ===== РЕЗЕРВНОЕ МЕНЮ (если JSON не загрузился) =====
