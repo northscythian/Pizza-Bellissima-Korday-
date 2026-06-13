@@ -1,30 +1,89 @@
-// Меню
-const menuData = [
-    { id: 1, name: "Маргарита", category: "Пиццы", description: "Томатный соус, моцарелла, базилик", price: 2500, image: "Photo/Margherita.jpeg" },
-    { id: 2, name: "Диавола", category: "Пиццы", description: "Острая пепперони, моцарелла, чили", price: 3200, image: "Photo/Spicy_Diavola_pizza_pepperon.jpeg" },
-    { id: 3, name: "Четыре сыра", category: "Пиццы", description: "Моцарелла, горгонзола, пармезан, фонтана", price: 3500, image: "Photo/Quattro_Formaggi_pizza_cheese_pull_202606122125.jpeg" },
-    { id: 4, name: "Карбонара", category: "Пиццы", description: "Бекон, яйцо, пармезан, сливочный соус", price: 3600, image: "Photo/Carbonara_pizza_with_pancetta_bacon_202606122127.jpeg" },
-    { id: 5, name: "Каприччоза", category: "Пиццы", description: "Ветчина, грибы, артишоки, оливки", price: 3800, image: "Photo/Capricciosa pizza.jpeg" },
-    { id: 6, name: "Брускетта", category: "Закуски", description: "Гренки с томатами, чесноком, базиликом", price: 1200, image: "Photo/Italian bruschetta.jpeg" },
-    { id: 7, name: "Фриттура Миста", category: "Закуски", description: "Кальмары, креветки, овощи в кляре", price: 2200, image: "Photo/Mixed fried seafood platter Frittura Mista.jpeg" },
-    { id: 8, name: "Капрезе", category: "Салаты", description: "Моцарелла, томаты, базилик, оливковое масло", price: 1800, image: "Photo/Caprese salad.jpeg" },
-    { id: 9, name: "Руккола с пармезаном", category: "Салаты", description: "Руккола, пармезан, томаты черри", price: 1600, image: "Photo/Arugula salad with shaved parmesan curls.jpeg" },
-    { id: 10, name: "Лимонад", category: "Напитки", description: "Домашний лимонад", price: 500, image: "" },
-    { id: 11, name: "Тирамису", category: "Десерты", description: "Кофе, маскарпоне, какао", price: 750, image: "" },
-    { id: 12, name: "Панна Котта", category: "Десерты", description: "Ванильный десерт с ягодным соусом", price: 650, image: "" },
-    { id: 13, name: "Трюфельный соус", category: "Соусы", description: "Сливочный соус с трюфелем", price: 250, image: "" },
-    { id: 14, name: "Агродольче", category: "Соусы", description: "Сладко-кислый итальянский соус", price: 180, image: "" }
-];
-
+// ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
+let menuData = [];
 let cart = {};
 let currentCategory = "all";
 let searchText = "";
 
+// ===== ЗАГРУЗКА МЕНЮ ИЗ JSON =====
+async function loadMenuFromJSON() {
+    try {
+        console.log("🔄 Загрузка меню из data/menu.json...");
+        const response = await fetch('data/menu.json');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("✅ Меню загружено:", data);
+        
+        // Преобразуем структуру CMS в плоский список для сайта
+        menuData = [];
+        let idCounter = 1;
+        
+        if (data.categories && Array.isArray(data.categories)) {
+            data.categories.forEach(category => {
+                if (category.items && Array.isArray(category.items)) {
+                    category.items.forEach(item => {
+                        menuData.push({
+                            id: idCounter++,
+                            name: item.name,
+                            category: category.name,
+                            description: item.description || "",
+                            price: item.price,
+                            image: item.image || ""
+                        });
+                    });
+                }
+            });
+        }
+        
+        console.log(`📋 Загружено ${menuData.length} блюд`);
+        renderMenu();
+        
+    } catch (error) {
+        console.error("❌ Ошибка загрузки меню:", error);
+        console.log("⚠️ Используем резервное меню");
+        useFallbackMenu();
+    }
+}
+
+// ===== РЕЗЕРВНОЕ МЕНЮ (если JSON не загрузился) =====
+function useFallbackMenu() {
+    menuData = [
+        { id: 1, name: "Маргарита", category: "Пиццы", description: "Томатный соус, моцарелла, базилик", price: 2500, image: "Photo/Margherita.jpeg" },
+        { id: 2, name: "Диавола", category: "Пиццы", description: "Острая пепперони, моцарелла, чили", price: 3200, image: "Photo/Spicy_Diavola_pizza_pepperon.jpeg" },
+        { id: 3, name: "Четыре сыра", category: "Пиццы", description: "Моцарелла, горгонзола, пармезан, фонтана", price: 3500, image: "Photo/Quattro_Formaggi_pizza_cheese_pull_202606122125.jpeg" },
+        { id: 4, name: "Карбонара", category: "Пиццы", description: "Бекон, яйцо, пармезан, сливочный соус", price: 3600, image: "Photo/Carbonara_pizza_with_pancetta_bacon_202606122127.jpeg" },
+        { id: 5, name: "Каприччоза", category: "Пиццы", description: "Ветчина, грибы, артишоки, оливки", price: 3800, image: "Photo/Capricciosa pizza.jpeg" },
+        { id: 6, name: "Брускетта", category: "Закуски", description: "Гренки с томатами, чесноком, базиликом", price: 1200, image: "Photo/Italian bruschetta.jpeg" },
+        { id: 7, name: "Фриттура Миста", category: "Закуски", description: "Кальмары, креветки, овощи в кляре", price: 2200, image: "Photo/Mixed fried seafood platter Frittura Mista.jpeg" },
+        { id: 8, name: "Капрезе", category: "Салаты", description: "Моцарелла, томаты, базилик, оливковое масло", price: 1800, image: "Photo/Caprese salad.jpeg" },
+        { id: 9, name: "Руккола с пармезаном", category: "Салаты", description: "Руккола, пармезан, томаты черри", price: 1600, image: "Photo/Arugula salad with shaved parmesan curls.jpeg" },
+        { id: 10, name: "Лимонад", category: "Напитки", description: "Домашний лимонад", price: 500, image: "" },
+        { id: 11, name: "Тирамису", category: "Десерты", description: "Кофе, маскарпоне, какао", price: 750, image: "" },
+        { id: 12, name: "Панна Котта", category: "Десерты", description: "Ванильный десерт с ягодным соусом", price: 650, image: "" },
+        { id: 13, name: "Трюфельный соус", category: "Соусы", description: "Сливочный соус с трюфелем", price: 250, image: "" },
+        { id: 14, name: "Агродольче", category: "Соусы", description: "Сладко-кислый итальянский соус", price: 180, image: "" }
+    ];
+    renderMenu();
+}
+
+// ===== ПОЛУЧЕНИЕ ПУТИ К ФОТО =====
 function getImagePath(item) {
-    if (item.image && item.image !== "") return item.image;
+    if (item.image && item.image !== "") {
+        // Если фото загружено через CMS
+        if (item.image.startsWith('images/uploads/')) {
+            return item.image;
+        }
+        // Если фото лежит в папке Photo
+        return item.image;
+    }
+    // Фото по умолчанию
     return "https://images.pexels.com/photos/1653877/pexels-photo-1653877.jpeg";
 }
 
+// ===== ОТОБРАЖЕНИЕ МЕНЮ =====
 function renderMenu() {
     let filtered = menuData;
     
@@ -49,12 +108,12 @@ function renderMenu() {
     
     grid.innerHTML = filtered.map(item => `
         <div class="menu-card">
-            <div class="card-img" style="background-image: url('${getImagePath(item)}');"></div>
+            <div class="card-img" style="background-image: url('${getImagePath(item)}'); background-size: cover; background-position: center;"></div>
             <div class="card-info">
-                <div class="card-title">${item.name}</div>
-                <div class="card-desc">${item.description}</div>
+                <div class="card-title">${escapeHtml(item.name)}</div>
+                <div class="card-desc">${escapeHtml(item.description)}</div>
                 <div class="card-price">${item.price.toLocaleString()} ₸</div>
-                <button class="add-btn" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">Добавить →</button>
+                <button class="add-btn" data-id="${item.id}" data-name="${escapeHtml(item.name)}" data-price="${item.price}">Добавить →</button>
             </div>
         </div>
     `).join("");
@@ -69,6 +128,18 @@ function renderMenu() {
     });
 }
 
+// ===== ЗАЩИТА ОТ XSS =====
+function escapeHtml(str) {
+    if (!str) return "";
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ===== КОРЗИНА =====
 function addToCart(id, name, price) {
     if (cart[id]) {
         cart[id].quantity++;
@@ -102,7 +173,7 @@ function updateCartUI() {
     cartItemsEl.innerHTML = items.map(item => `
         <div class="cart-item">
             <div class="cart-item-info">
-                <h4>${item.name}</h4>
+                <h4>${escapeHtml(item.name)}</h4>
                 <p>${item.price.toLocaleString()} ₸ x ${item.quantity}</p>
             </div>
             <div class="cart-item-controls">
@@ -165,24 +236,18 @@ function loadCart() {
     }
 }
 
-// ⚠️ ⚠️ ⚠️ Telegram настройки — ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ ⚠️ ⚠️ ⚠️
-// 1. BOT_TOKEN = то, что дал @BotFather (начинается с чисел, потом двоеточие)
-// 2. CHAT_ID = ваш личный ID (число, получаете от @userinfobot)
+// ===== TELEGRAM И GOOGLE SHEETS =====
 const BOT_TOKEN = "8895293528:AAHX6k1TCDBSw_019BvrSU0jQYXyMTek7pY";
-const CHAT_ID = "6017544408";  // ← СЮДА ВАШ ЛИЧНЫЙ ID (получите от @userinfobot)
+const CHAT_ID = "6017544408";
 
 async function sendOrder(order) {
-    // ===== TELEGRAM =====
-    const BOT_TOKEN = "8895293528:AAHX6k1TCDBSw_019BvrSU0jQYXyMTek7pY";
-    const CHAT_ID = "6017544408";
-    
     const itemsText = Object.values(order.items).map(i => 
         `${i.name} x${i.quantity} = ${(i.price * i.quantity).toLocaleString()} ₸`
     ).join("\n");
     
     const text = `🍕 НОВЫЙ ЗАКАЗ!\n\n👤 ${order.name}\n📞 ${order.phone}\n📍 ${order.address}\n💳 ${order.payment}\n\n📋 Состав:\n${itemsText}\n\n💰 Итого: ${order.total.toLocaleString()} ₸\n${order.comment ? `\n📝 ${order.comment}` : ""}`;
     
-    // Отправка в Telegram
+    // Telegram
     let telegramOk = false;
     try {
         const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -196,10 +261,8 @@ async function sendOrder(order) {
         else console.error("Telegram error:", data);
     } catch(e) { console.error("Telegram fetch error:", e); }
     
-    // ===== GOOGLE SHEETS =====
-    // ⚠️ ВСТАВЬТЕ ВАШУ ССЫЛКУ ИЗ APPS SCRIPT ⚠️
-    const GOOGLE_SCRIPT_URL = "https://docs.google.com/spreadsheets/d/15T2qPlnexf5jqKIPa_4KhYdZYi3amG1WaOctVMxjlR0/edit?usp=sharing";
-    
+    // Google Sheets
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/ВАША_ССЫЛКА/exec";
     let sheetsOk = false;
     try {
         const res = await fetch(GOOGLE_SCRIPT_URL, {
@@ -215,7 +278,6 @@ async function sendOrder(order) {
         sheetsOk = false;
     }
     
-    // ===== ИТОГ =====
     if (telegramOk && sheetsOk) {
         alert("✅ Заказ принят!");
         return true;
@@ -231,9 +293,9 @@ async function sendOrder(order) {
     }
 }
 
-// Инициализация
+// ===== ИНИЦИАЛИЗАЦИЯ =====
 document.addEventListener("DOMContentLoaded", () => {
-    renderMenu();
+    loadMenuFromJSON();  // Загружаем меню из CMS
     loadCart();
     
     // Категории
