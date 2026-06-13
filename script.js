@@ -4,122 +4,111 @@ let cart = {};
 let currentCategory = "all";
 let searchText = "";
 
-// ===== ЗАГРУЗКА МЕНЮ ИЗ ФАЙЛОВ DECAP CMS =====
-async function loadMenuFromJSON() {
+// ===== ЗАГРУЗКА МЕНЮ ИЗ ФАЙЛОВ НА GITHUB =====
+async function loadMenuFromGitHub() {
     try {
-        console.log("🔄 Загрузка меню из data/categories/...");
+        console.log("🔄 Загрузка меню из GitHub...");
         
-        // Получаем список файлов категорий
+        // Список файлов категорий
         const categoryFiles = [
-            'pizzas.md',
-            'zakuski.md', 
-            'salaty.md',
-            'napitki.md',
-            'deserty.md',
-            'sousy.md'
+            { file: "pizzas.md", name: "Пиццы" },
+            { file: "zakuski.md", name: "Закуски" },
+            { file: "salaty.md", name: "Салаты" },
+            { file: "napitki.md", name: "Напитки" },
+            { file: "deserty.md", name: "Десерты" },
+            { file: "sousy.md", name: "Соусы" }
         ];
         
-        let allCategories = [];
-        
-        for (const file of categoryFiles) {
-            try {
-                const response = await fetch(`data/categories/${file}`);
-                if (response.ok) {
-                    const text = await response.text();
-                    // Парсим YAML front matter
-                    const match = text.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
-                    if (match) {
-                        const frontMatter = match[1];
-                        const category = parseYAML(frontMatter);
-                        allCategories.push(category);
-                    }
-                }
-            } catch(e) {
-                console.log(`Файл ${file} не найден`);
-            }
-        }
-        
-        if (allCategories.length === 0) {
-            throw new Error("Нет загруженных категорий");
-        }
-        
-        // Преобразуем в плоский список для сайта
-        menuData = [];
+        let allItems = [];
         let idCounter = 1;
         
-        allCategories.forEach(category => {
-            if (category.items && Array.isArray(category.items)) {
-                category.items.forEach(item => {
-                    menuData.push({
-                        id: idCounter++,
-                        name: item.name,
-                        category: category.name,
-                        description: item.description || "",
-                        price: item.price,
-                        image: item.image || ""
-                    });
-                });
+        for (const cat of categoryFiles) {
+            try {
+                const url = `https://raw.githubusercontent.com/northscythian/Pizza-Bellissima-Korday-/main/data/categories/${cat.file}`;
+                console.log(`Загрузка: ${url}`);
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    // Парсим YAML файл
+                    const parsed = parseYamlMenu(text, cat.name);
+                    allItems = allItems.concat(parsed);
+                } else {
+                    console.log(`Файл ${cat.file} не найден, используем резервные данные`);
+                }
+            } catch(e) {
+                console.error(`Ошибка загрузки ${cat.file}:`, e);
             }
-        });
+        }
         
-        console.log(`✅ Загружено ${menuData.length} блюд`);
+        if (allItems.length > 0) {
+            // Присваиваем ID
+            menuData = allItems.map((item, index) => ({
+                ...item,
+                id: index + 1
+            }));
+            console.log(`✅ Загружено ${menuData.length} блюд из GitHub`);
+        } else {
+            console.log("⚠️ Не удалось загрузить данные, используем резервное меню");
+            useFallbackMenu();
+        }
+        
         renderMenu();
         
     } catch (error) {
         console.error("❌ Ошибка загрузки меню:", error);
         useFallbackMenu();
+        renderMenu();
     }
 }
 
-// Простой парсер YAML
-function parseYAML(yaml) {
-    const result = {};
-    const lines = yaml.split('\n');
-    let currentKey = null;
+// Парсер YAML файлов меню
+function parseYamlMenu(yamlText, categoryName) {
+    const items = [];
+    const lines = yamlText.split('\n');
+    
     let inItems = false;
     let currentItem = {};
-    let itemsList = [];
     
     for (let line of lines) {
         line = line.trim();
+        
         if (line === 'items:') {
             inItems = true;
-            result.items = [];
             continue;
         }
+        
         if (inItems && line === '-') {
             if (Object.keys(currentItem).length > 0) {
-                itemsList.push(currentItem);
+                currentItem.category = categoryName;
+                items.push({ ...currentItem });
+                currentItem = {};
             }
-            currentItem = {};
             continue;
         }
+        
         if (inItems && line.includes(':')) {
-            const [key, ...valueParts] = line.split(':');
-            const value = valueParts.join(':').trim();
+            const colonIndex = line.indexOf(':');
+            const key = line.substring(0, colonIndex).trim();
+            let value = line.substring(colonIndex + 1).trim();
+            
             if (key === 'name') currentItem.name = value;
             if (key === 'description') currentItem.description = value;
             if (key === 'price') currentItem.price = parseInt(value);
             if (key === 'image') currentItem.image = value;
-            continue;
-        }
-        if (!inItems && line.includes(':')) {
-            const [key, value] = line.split(':');
-            result[key.trim()] = value.trim();
         }
     }
     
+    // Добавляем последний элемент
     if (Object.keys(currentItem).length > 0) {
-        itemsList.push(currentItem);
-    }
-    if (itemsList.length > 0) {
-        result.items = itemsList;
+        currentItem.category = categoryName;
+        items.push(currentItem);
     }
     
-    return result;
+    return items;
 }
 
-// ===== РЕЗЕРВНОЕ МЕНЮ (если JSON не загрузился) =====
+// Резервное меню (если файлы не загрузились)
 function useFallbackMenu() {
     menuData = [
         { id: 1, name: "Маргарита", category: "Пиццы", description: "Томатный соус, моцарелла, базилик", price: 2500, image: "Photo/Margherita.jpeg" },
@@ -137,24 +126,17 @@ function useFallbackMenu() {
         { id: 13, name: "Трюфельный соус", category: "Соусы", description: "Сливочный соус с трюфелем", price: 250, image: "" },
         { id: 14, name: "Агродольче", category: "Соусы", description: "Сладко-кислый итальянский соус", price: 180, image: "" }
     ];
-    renderMenu();
 }
 
-// ===== ПОЛУЧЕНИЕ ПУТИ К ФОТО =====
+// Получение пути к фото
 function getImagePath(item) {
     if (item.image && item.image !== "") {
-        // Если фото загружено через CMS
-        if (item.image.startsWith('images/uploads/')) {
-            return item.image;
-        }
-        // Если фото лежит в папке Photo
         return item.image;
     }
-    // Фото по умолчанию
     return "https://images.pexels.com/photos/1653877/pexels-photo-1653877.jpeg";
 }
 
-// ===== ОТОБРАЖЕНИЕ МЕНЮ =====
+// Отображение меню
 function renderMenu() {
     let filtered = menuData;
     
@@ -199,7 +181,7 @@ function renderMenu() {
     });
 }
 
-// ===== ЗАЩИТА ОТ XSS =====
+// Защита от XSS
 function escapeHtml(str) {
     if (!str) return "";
     return str
@@ -210,7 +192,7 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-// ===== КОРЗИНА =====
+// Корзина
 function addToCart(id, name, price) {
     if (cart[id]) {
         cart[id].quantity++;
@@ -307,7 +289,7 @@ function loadCart() {
     }
 }
 
-// ===== TELEGRAM И GOOGLE SHEETS =====
+// Telegram и Google Sheets
 const BOT_TOKEN = "8895293528:AAHX6k1TCDBSw_019BvrSU0jQYXyMTek7pY";
 const CHAT_ID = "6017544408";
 
@@ -318,7 +300,6 @@ async function sendOrder(order) {
     
     const text = `🍕 НОВЫЙ ЗАКАЗ!\n\n👤 ${order.name}\n📞 ${order.phone}\n📍 ${order.address}\n💳 ${order.payment}\n\n📋 Состав:\n${itemsText}\n\n💰 Итого: ${order.total.toLocaleString()} ₸\n${order.comment ? `\n📝 ${order.comment}` : ""}`;
     
-    // Telegram
     let telegramOk = false;
     try {
         const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -328,35 +309,10 @@ async function sendOrder(order) {
         });
         const data = await res.json();
         telegramOk = data.ok;
-        if (telegramOk) console.log("✅ Telegram: заказ отправлен");
-        else console.error("Telegram error:", data);
-    } catch(e) { console.error("Telegram fetch error:", e); }
+    } catch(e) { console.error("Telegram error:", e); }
     
-    // Google Sheets
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/ВАША_ССЫЛКА/exec";
-    let sheetsOk = false;
-    try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(order)
-        });
-        sheetsOk = true;
-        console.log("✅ Google Sheets: запрос отправлен");
-    } catch(e) { 
-        console.error("Sheets error:", e);
-        sheetsOk = false;
-    }
-    
-    if (telegramOk && sheetsOk) {
+    if (telegramOk) {
         alert("✅ Заказ принят!");
-        return true;
-    } else if (telegramOk) {
-        alert("✅ Заказ принят! (Уведомление отправлено)");
-        return true;
-    } else if (sheetsOk) {
-        alert("✅ Заказ сохранён в таблицу!");
         return true;
     } else {
         alert("❌ Ошибка отправки. Попробуйте позже.");
@@ -364,9 +320,9 @@ async function sendOrder(order) {
     }
 }
 
-// ===== ИНИЦИАЛИЗАЦИЯ =====
+// Инициализация
 document.addEventListener("DOMContentLoaded", () => {
-    loadMenuFromJSON();  // Загружаем меню из CMS
+    loadMenuFromGitHub();
     loadCart();
     
     // Категории
