@@ -1,0 +1,38 @@
+media:
+  input: "images/uploads"
+  output: "images/uploads"
+
+collections:
+  - name: "menu"
+    label: "Меню пиццерии"
+    path: "data/menu.json"
+    format: "json"
+    fields:
+      - name: "categories"
+        label: "Категории"
+        widget: "list"
+        label_singular: "Категория"
+        fields:
+          - name: "name"
+            label: "Название категории"
+            widget: "string"
+          - name: "items"
+            label: "Блюда"
+            widget: "list"
+            label_singular: "Блюдо"
+            fields:
+              - name: "name"
+                label: "Название блюда"
+                widget: "string"
+              - name: "description"
+                label: "Описание"
+                widget: "text"
+                required: false
+              - name: "price"
+                label: "Цена (₸)"
+                widget: "number"
+                value_type: "int"
+              - name: "image"
+                label: "Фото"
+                widget: "image"
+                required: false
